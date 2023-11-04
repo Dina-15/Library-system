@@ -1,301 +1,181 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
-#include <iostream>
-#include <string.h>
-#include "Node.h"
-#include "Iterator.h"
 
-using namespace std;
-template <typename T>
+template <typename T,typename I, typename L>
 class Container
 {
+private:
+    I *list;
+    int available, borrowed;
 public:
     Container();
-    virtual ~Container();
-
-    Node<T>* begin();
-    Node<T>* end();
-    Node<T>* prev();
-    Node<T>* next();
+    ~Container();
     int containerEmpty();
     int containerfull();
     int containersize();
-    int availableBooks();
-    int borrowedBooks();
-    void insertFront(T data);
-    void insertBack(T data);
-    void insertAt(T data,int pos);
-    void remove();
-    void removeAt(int pos);
-    T find(string key);
-    T borrow(string key);
-    T retrieve(int pos);
-    Node<T>* partition(Node<T> *start, Node<T> *end);
-    void sort(Node<T> *start, Node<T> *end);
-
+    int availableItems();
+    int borrowedItems();
+    void pushFront(T data);
+    void pushBack(T data);
+    void insertAt(int pos, T data);
+    T popFront();
+    T popBack();
+    T removeAt(int pos);
+    T Update(std::string key, bool (*pf)(T, std::string), T new_value);
+    T retrieveFront();
+    T retrieveBack();
+    T retrieveAt(int pos);
+    T search(std::string key, bool(*pf)(T, std::string));
+    void sort( bool(*pf)(T, T));
+    void reverse();
+    T borrow(std::string key, bool(*pf)(T, std::string), bool(*pf2)(T));
     class notFound{};
-private:
-    Node<T>* head;
-    Iterator<T> itr;
-    int size, available, borrowed;
+    class notAvailable{};
 };
+#endif // Container
 
-template <typename T>
-Container<T>::Container()
+template <typename T,typename I, typename L>
+Container<T,I , L>::Container()
 {
-    head = NULL;
-    size =0;
+    list = new L();
     borrowed=0;
     available=0;
 }
-template <typename T>
-Container<T>::~Container()
+template <typename T,typename I, typename L>
+Container<T,I, L>::~Container()
 {
-    this->remove();
+    delete list;
+    available=0;
 }
-
-template <typename T>
-int Container<T>::containerEmpty()
-{
-    return size==0;
-}
-template <typename T>
-int Container<T>::containerfull()
-{
-    return 0;
-}
-template <typename T>
-int Container<T>::containersize()
-{
-    return size;
-}
-template <typename T>
-int Container<T>::availableBooks()
+template <typename T,typename I, typename L>
+int Container<T,I, L>::availableItems()
 {
     return available;
 }
-template <typename T>
-int Container<T>::borrowedBooks()
+template <typename T,typename I, typename L>
+int Container<T,I, L>::borrowedItems()
 {
     return borrowed;
 }
-template <typename T>
-void Container<T>::insertFront(T data)
+template <typename T,typename I, typename L>
+int Container<T,I, L>::containerEmpty()
 {
-    Node<T>* newNode = new Node<T>(data);
-    newNode->next=head;
-    head=newNode;
-    itr.current=head;
-    itr.pos = 0;
-    ++size;
-    ++available;
+    return list->getSize() == 0;
 }
-template <typename T>
-void Container<T>::insertBack(T data)
+template <typename T,typename I, typename L>
+int Container<T,I, L>::containerfull()
 {
-    Node<T>* newNode = new Node<T>(data);
-    if(size==0)
-    {
-        newNode->next=head;
-        head=newNode;
-        itr.current=head;
-        itr.pos = 0;
-    }
-    else
-    {
-        for(; itr.pos<size-1; ++itr);
-        newNode->next=NULL;
-        itr.current->next=newNode;
-    }
-    ++size;
-    ++available;
+    return 0;
 }
-template <typename T>
-void Container<T>::insertAt(T data,int pos)
+template <typename T,typename I, typename L>
+int Container<T,I, L>::containersize()
 {
-    Node<T>* newNode = new Node<T>(data);
-    if(pos==0)
+    return list->getSize();
+}
+template <typename T,typename I, typename L>
+void Container<T,I, L>::pushFront(T data)
+{
+    list->push_front(data);
+    available++;
+}
+template <typename T,typename I, typename L>
+void Container<T,I, L>::pushBack(T data)
+{
+    list->push_back(data);
+    available++;
+}
+template <typename T,typename I,typename L>
+void Container<T,I, L>::insertAt(int pos, T data)
+{
+    list->push_at(pos,data);
+    available++;
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::popFront()
+{
+    available--;
+    return list->pop_front();
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::popBack()
+{
+    available--;
+    return list->pop_back();
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::removeAt(int pos)
+{
+    available--;
+    return list->remove_at(pos);
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::retrieveFront()
+{
+    return list->retreive(0);
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::retrieveBack()
+{
+    return list->retreive(list->getSize()-1);
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::retrieveAt(int pos)
+{
+    return list->retreive(pos);
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::Update(std::string key, bool (*pf)(T, std::string), T new_value)
+{
+    try
     {
-        newNode->next=head;
-        head=newNode;
-        itr.current=head;
-        itr.pos=0;
+        return list->Edit(key, *pf, new_value);
     }
-    else
+    catch (...)
     {
-        if(pos<=itr.pos)
+        throw notFound();
+    }
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::search(std::string key, bool(*pf)(T, std::string))
+{
+    try{
+    return list->find(key,*pf);
+    }
+    catch(...)
+    {
+        throw notFound();
+    }
+}
+template <typename T,typename I, typename L>
+void Container<T,I, L>::sort(bool(*pf)(T, T))   // QUICK SORT ALGORITHM
+{
+    list->sort(list->begin(), list->end(), *pf);
+}
+template <typename T,typename I, typename L>
+void Container<T,I, L>::reverse()
+{
+    list->reverse();
+}
+template <typename T,typename I, typename L>
+T Container<T,I, L>::borrow(std::string key, bool(*pf)(T, std::string), bool(*pf2)(T))
+{
+    try
+    {
+        T element = list->find(key, *pf);
+        if( ! (*pf2)(element))
         {
-            itr.current=head;
-            itr.pos=0;
+            throw notAvailable();
         }
-        for(; itr.pos<pos-1; ++itr);
-        newNode->next=itr.current->next;
-        itr.current->next=newNode;
+        available--;
+        borrowed++;
+        return element;
     }
-    ++size;
-    ++available;
-}
-template <typename T>
-void Container<T>::remove() // clear the container
-{
-    Node<T> *temp=head;
-    while(head)
+    catch (const notAvailable)
     {
-        temp=head->next;
-        delete head;
-        head=temp;
+        throw notAvailable();
     }
-    size=0;
-    available=0;
-}
-template <typename T>
-void Container<T>::removeAt(int pos)
-{
-    Node<T>* temp;
-    if(pos==0)
+    catch (...)
     {
-        itr.current=head->next;
-        delete head;
-        head=itr.current;
-        itr.current=head;
-        itr.pos = 0;
-    }
-    else
-    {
-        if(pos<=itr.pos)
-        {
-            itr.current=head;
-            itr.pos=0;
-        }
-        for(; itr.pos<pos-1; ++itr);
-        temp=itr.current->next->next;
-        delete itr.current->next;
-        itr.current->next=temp;
-    }
-    --size;
-    --available;
-}
-template <typename T>
-T Container<T>::find(string key)
-{
-    itr.current=head;
-    itr.pos=0;
-    for(; itr.pos <size; ++itr)
-    {
-        if(key==itr.current->data.title || key==itr.current->data.author || key==itr.current->data.genre || key==itr.current->data.ISBN)
-            return itr.current->data;
-    }
-    throw notFound();
-}
-template <typename T>
-T Container<T>::borrow(string key)
-{
-    itr.current=head;
-    itr.pos=0;
-    for(; itr.pos <size; ++itr)
-    {
-        if((key==itr.current->data.title || key==itr.current->data.author || key==itr.current->data.genre || key==itr.current->data.ISBN) && itr.current->data.status == "available")
-        {
-            --available;
-            ++borrowed;
-            itr.current->data.status = "unavailable";
-            return itr.current->data;
-        }
-    }
-    throw notFound();
-}
-template <typename T>
-T Container<T>::retrieve(int pos)
-{
-    if(pos==0)
-        return head->data;
-    else
-    {
-        if(pos>=itr.pos)
-        {
-            for(int i=itr.pos; i<pos; ++i)
-                ++itr;
-        }
-        else if(pos<=itr.pos)
-        {
-            itr.current=head;
-            itr.pos=0;
-            for(int i=0; i<pos; ++i)
-                ++itr;
-        }
-        return itr.current->data;
+        throw notFound();
     }
 }
-template <typename T>
-Node<T>* Container<T>::partition(Node<T>* start, Node<T> *end)
-{
-    if(start==end || start==NULL || end==NULL)
-        return start;
-    Node<T> *pivot_prev = start;
-    Node<T> *current=start;
-    T pivot = end->data;
-    while(!(start == end))
-    {
-        if(start->data.title < pivot.title) // sorting based on title
-        {
-            pivot_prev=current;
-            T temp = current->data;
-            current->data=start->data;
-            start->data=temp;
-            current=current->next;
-        }
-        start =start->next;
-    }
-    T temp = current->data;
-    current->data=pivot;
-    end->data=temp;
-
-    return pivot_prev;
-}
-template <typename T>
-void Container<T>::sort(Node<T> *start, Node<T> *end) // QUICK SORT ALGORITHM
-{
-    if(start==end)
-        return;
-    Node<T>* pivot_prev = partition(start, end);
-    sort(start, pivot_prev);
-    if(!(pivot_prev == NULL) && pivot_prev == start)
-        sort(pivot_prev->next, end);
-    else if(!(pivot_prev == NULL) && !(pivot_prev->next == NULL))
-        sort(pivot_prev->next->next, end);
-}
-template <typename T>
-Node<T>* Container<T>::begin()
-{
-    return head;
-}
-template <typename T>
-Node<T>* Container<T>::end()
-{
-    if(size==0)
-    {
-        return head;
-    }
-    else
-    {
-        for(; itr.pos<size-1; ++itr);
-        return itr.current;
-    }
-}
-template <typename T>
-Node<T>* Container<T>::prev()
-{
-    int temp=itr.pos;
-    itr.current=head;
-    itr.pos=0;
-    for(int i=0; i<temp; ++i)
-        ++itr;
-    return itr.current;
-}
-template <typename T>
-Node<T>* Container<T>::next()
-{
-    return itr.current->next;
-}
-
-#endif //Container

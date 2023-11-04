@@ -1,46 +1,36 @@
 #ifndef NODE_H
 #define NODE_H
-#include <string.h>
-template <typename M>
+
+template <typename T>
 class Node
 {
 public:
-    Node(M data);
+    Node(T data);
     virtual ~Node();
-    bool operator==(const Node<M>& n);
-    bool operator==(const std::string s);
+    bool operator==(const Node<T>& n);
     bool operator==(const long long int num);
-template <typename T>
-friend class Container;
-template <typename U>
-friend class Iterator;
+    Node<T>* next;
+    Node<T>* prev;
+    T data;
 private:
-    Node<M>* next;
-    M data;
 };
-template <typename M>
-Node<M>::Node(M data)
+template <typename T>
+Node<T>::Node(T data)
 {
-  this->data=data;
-  this->next=NULL;
+    this->data=data;
+    this->next=NULL;
+    this->prev=NULL;
 }
-template <typename M>
-Node<M>::~Node()
-{
+template <typename T>
+Node<T>::~Node(){}
 
-}
-template <typename M>
-bool Node<M>::operator==(const Node<M>& n)
+template <typename T>
+bool Node<T>::operator==(const Node<T>& n)
 {
     return next == n.next ;
 }
-template <typename M>
-bool Node<M>::operator==(const std::string s)
-{
-   return data.title==s;
-}
-template <typename M>
-bool Node<M>::operator==(const long long int num)
+template <typename T>
+bool Node<T>::operator==(const long long int num)
 {
     return next == NULL ;
 }

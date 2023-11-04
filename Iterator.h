@@ -1,44 +1,54 @@
 #ifndef ITERATOR_H
 #define ITERATOR_H
+#include "Node.h"
 
-template <typename U>
+template <typename T>
 class Iterator
 {
 public:
     Iterator();
     virtual ~Iterator();
-    Iterator<U> operator++();
-    bool operator==(const Iterator<U>& it);
-    template <typename T>
-    friend class Container;
+    Iterator<T>& operator++();
+    void begin(Node<T>* head);
+    void end(Node<T>* tail);
+    // Iterator<T>& operator=(const Iterator<T>& other);
+    // bool operator==(const Iterator<T>& it);
+    Node<T>* current;
 private:
-    Node<U>* current;
-    int pos;
 };
 
-template <typename U>
-Iterator<U>::Iterator()
+template <typename T>
+Iterator<T>::Iterator(){}
+template <typename T>
+Iterator<T>::~Iterator(){}
+template <typename T>
+void Iterator<T>::begin(Node<T>* head)
 {
-    current=NULL;
-    pos=0;
+    current = head;
 }
-template <typename U>
-Iterator<U>::~Iterator()
+template <typename T>
+void Iterator<T>::end(Node<T>* tail)
 {
-
+    current = tail;
 }
-template <typename U>
-bool Iterator<U>::operator==(const Iterator<U>& it)
+template <typename T>
+Iterator<T>& Iterator<T>::operator++()
 {
-    return current == it.current ;
-}
-template <typename U>
-Iterator<U> Iterator<U>::operator++()
-{
-    this->current=current->next;
-    this->pos++;
+    current=current->next;
     return *this;
 }
+
+/*template <typename T>
+Iterator<T>& Iterator<T>::operator=(const Iterator<T>& other)
+{
+    current=other.current;
+    return *this;
+}
+template <typename T>
+bool Iterator<T>::operator==(const Iterator<T>& it)
+{
+    return current == it.current ;
+}*/
 
 #endif // ITERATOR_H
 
